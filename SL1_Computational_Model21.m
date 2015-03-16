@@ -10,7 +10,7 @@ Beta = params(1);                  % choice (inverse) temperature (1/T). Note : 
 lr1  = params(2);                 % factual learning rate
 lr2  = params(3);
 %if model > 6; lr2=params(3); end; % Influence parameter (K) / simulation of the other's also using a Fictitious Play 
-
+ 
 %% Initial values 
 
 if model == 1 || model == 3 || model == 5 || model == 7 || model == 9 || model == 11 || model == 13
@@ -31,11 +31,11 @@ Q       = zeros(2,2); % Expected values of actions 1 and 2 in state 1.
 %     Q(1,2)  = 0.75;
 % else % if model == 2 || model == 3 || model == 5 || model == 7 ||
 if pl == 1 % employee (Q(1,1) -> Q-value action "work", Q(1,2) -> Q-value action "not work")
-    Q(1,1)  = 1*(1-pstar); 
-    Q(1,2)  = 2*(pstar); 
+    Q(:,1)  = 1*(1-pstar); 
+    Q(:,2)  = 2*(pstar); 
 else % pl == 2 % employer (Q(1,1) -> Q-value action "inspect", Q(1,2) -> Q-value action "not inspect")
-    Q(1,1)  = 2*(pstar); 
-    Q(1,2)  = 1*(1-pstar); 
+    Q(:,1)  = 2*(pstar); 
+    Q(:,2)  = 1*(1-pstar); 
 end
 % end
 

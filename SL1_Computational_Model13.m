@@ -1,17 +1,16 @@
-%% Model 1-3: INFLUENCE VARIATIONS%%
+%% Model 1-3: 3 versions of the Influence Model IM , 1-Inf, 2-Inf (Hampton et al 2008, Devaine et al 2014) %%
 function lik = SL1_Computational_Model13(params, pl, ss, as, rs, so, ao, ro, model) % input vectors: pl= player role of subject, (s= state, a= action, r= reward) of subject (s) and opponent (o), at each trial
 % This function estimates the inverse loglikelihood of each model for each parameter value that fmincon tests in the optimization process
-% Thibaud Griessinger, Paris, November, 2014
-% Adapted from : "Thibaud Griessinger, Los Angeles, February, 2014 - adapted from "Stefano Palminteri, Paris, October, 2013""
+% Thibaud Griessinger, Paris, February 2015
+% Adapted from : "Thibaud Griessinger, Paris, November, 2014"
 
 % 0, 50, 100 pts converted in 0, 1, 2 units in outcome data and models 
-
+ 
 %% Parameters in each model 
 Beta = params(1);                  % choice (inverse) temperature (1/T). Note : High temperatures (beta -> 0) cause all actions to be nearly equiprobable, whereas low temperatures (beta -> Inf) cause greedy action selections                                   
 lr1  = params(2);                 % factual learning rate
 lr2  = params(3);
 lr3  = params(4);
-%if model > 6; lr2=params(3); end; % Influence parameter (K) / simulation of the other's also using a Fictitious Play 
 
 %% Initial values 
 
@@ -60,7 +59,7 @@ for t = 1:length(as);
             if pl(t) == 1 % subject is the employee (Hampton's nomenclature : p = subject-as-employer's proba action, and p** = subject-as-employer's action proba simulated by the opponent-as-employee)
                 % a) estimation of the own's action proba as estimated by the opponent through a fictitious play (inferred probabilities that the opponent has of the subject) : such second order beliefs are inferred by the agent directly from the inferred opponent?s strategy by inverting the inferred probabilities of the opponent?s actions estimated with it's APE update
                 Qstar= (1/3)-((1/weight)*log((1-pstar)/pstar)); % [p**(t)] in Hampton's equations
-                % NORMALIZATION
+                % NORMALIZATION Qstar
                 if Qstar < epsilon %if pstar too small, or 0, then superior to 0 
                     Qstar = epsilon; % or pstar= epsilon ?
                 elseif Qstar > (1-epsilon)
@@ -69,7 +68,7 @@ for t = 1:length(as);
                 % b) Opponent had seen an action from the subject (the one that maximize her gain depending on her own move) therefore :
                 LT = (lr1* APE); % Learning Term
                 pstar= pstar + LT + (lr2*weight*pstar*(1-pstar)*(mod(as(t),2)-Qstar)); % [q*(t)] : update given what the subject's action the opponent has experienced
-                % NORMALIZATION
+                % NORMALIZATION pstar
                 if pstar < epsilon %if pstar too small, or 0, then superior to 0 
                     pstar = epsilon; % or pstar= epsilon ?
                 elseif pstar > (1-epsilon)
@@ -82,7 +81,7 @@ for t = 1:length(as);
             elseif pl(t) == 2 % subject is the employer (Hampton's nomenclature : q = subject-as-employer's proba action, and q** = subject-as-employer's action proba simulated by the opponent-as-employer)
                 % a)
                 Qstar= (1/3)+((1/weight)*log((1-pstar)/pstar)); % [q**(t)] in Hampton's equations
-                % NORMALIZATION
+                % NORMALIZATION Qstar
                 if Qstar < epsilon %if pstar too small, or 0, then superior to 0 
                     Qstar = epsilon; % or pstar= epsilon ?
                 elseif Qstar > (1-epsilon)
@@ -91,7 +90,7 @@ for t = 1:length(as);
                 % b)
                 LT = (lr1* APE); % Learning Term
                 pstar= pstar + LT - (lr2*weight*pstar*(1-pstar)*(mod(as(t),2)-Qstar)); % [p*(t)]
-                % NORMALIZATION
+                % NORMALIZATION pstar
                 if pstar < epsilon %if pstar too small, or 0, then superior to 0 
                     pstar = epsilon; % or pstar= epsilon ?
                 elseif pstar > (1-epsilon)
@@ -108,7 +107,7 @@ for t = 1:length(as);
 
     % a) Model does not consider trials missed by the subject (as(t)== 0) (and those both missed (ao(t)== 0)). even the other experienced the default action selected for her, since she missed she might not think the other experienced it.
     elseif model == 3 || model == 4
-        kappa = lr2;
+        kappa = lr2; % kappa = Beta*lr2 
         % 1) Agent observes the opponent's action and generates an Action Prediction Error over her (observed) behavior
         if  as(t)~= 0 % Even if opponent's action experienced, subject do not update own's action proba since not choose at time and therefore default action selected
             lik = lik + log(1/ (1+ (exp((Q(1,(mod(as(t),2)+1))- Q(1,as(t)))*Beta))));

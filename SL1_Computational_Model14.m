@@ -1,16 +1,14 @@
 %% Roth&Erev + EWA 
 function lik = SL1_Computational_Model14(params, pl, ss, as, rs, so, ao, ro, model) % input vectors: pl= player role of subject, (s= state, a= action, r= reward) of subject (s) and opponent (o), at each trial
 % This function estimates the inverse loglikelihood of each model for each parameter value that fmincon tests in the optimization process
-% Thibaud Griessinger, Paris, November, 2014
-% Adapted from : "Thibaud Griessinger, Los Angeles, February, 2014 - adapted from "Stefano Palminteri, Paris, October, 2013""
+% Thibaud Griessinger, Paris, February, 2015
 
 % 0, 50, 100 pts converted in 0, 1, 2 units in outcome data and models 
 
 %% Parameters in each model 
 Beta = params(1);                  % choice (inverse) temperature (1/T). Note : High temperatures (beta -> 0) cause all actions to be nearly equiprobable, whereas low temperatures (beta -> Inf) cause greedy action selections                                   
-lr1  = params(2);                 % factual learning rate
+lr1  = params(2);                  % factual learning rate
 lr2  = params(3);
-%if model > 6; lr2=params(3); end; % Influence parameter (K) / simulation of the other's also using a Fictitious Play 
 
 %% Initial values 
 
@@ -58,27 +56,27 @@ for t = 1:length(as);
             lik = lik + log(1/ (1+ (exp((Q(1,(mod(as(t),2)+1))- Q(1,as(t)))*Beta)))); % equivalent to Stefano-fromDaw10's : lik = lik + beta1 * Q(s(t),a(t)) - log(sum(exp(beta1 * Q(s(t),:)))) % with s(t) state at trial i, here = 1
             
             % Factual Update: 
-            % 2) Model updates estimated Q-value of the action the subject selected: 
+            % 1) Model updates estimated Q-value of the action the subject selected: 
             Q(1,as(t)) = (1-omeg)*Q(1,as(t)) + (rs(t)*(1-epsil));
-            
-            % 2) Model updates estimated Q-value of the action the subject selected: 
+            % Counterfactual Update:
+            % 2) Model updates estimated Q-value of the action the subject did not selected: 
             Q(1,(mod(as(t),2)+1)) = (1-omeg)*Q(1,(mod(as(t),2)+1)) + (rs(t)*(epsil));
         end
 
 
     % %% EWA (Hamton)
     % elseif model == 2
-    %     ??????
+    %     ?????? equation in Supp Info ??????
 
     %% EWA (Zhu)
     elseif model == 2 || model == 3
         phi = lr1; % 
         delta = lr2;
         if as(t)~= 0
-            % Cumulated Lok likelihood of the data given the free parameters : likelihood of the model to select as(t)). Goal -> closest to 0 (log(p(as)=1))
+            % Cumulated Log likelihood of the data given the free parameters : likelihood of the model to select as(t)). Goal -> closest to 0 (log(p(as)=1))
             lik = lik + log(1/ (1+ (exp((Q(1,(mod(as(t),2)+1))- Q(1,as(t)))*Beta)))); % equivalent to Stefano-fromDaw10's : lik = lik + beta1 * Q(s(t),a(t)) - log(sum(exp(beta1 * Q(s(t),:)))) % with s(t) state at trial i, here = 1
             
-            % Counterfactual Reward
+            % Estimate Counterfactual Reward given subject and the opponent's choices: 
             % 0) generates counterfactual reward. What would have been obtained if chose differently 
             if pl(t) == 1 % model as agent is the employee (Hampton's nomenclature : p = subject-as-employer's proba action, and p** = subject-as-employer's action proba simulated by the opponent-as-employee)
                 if as(t) == 1 && ao(t) == 1
